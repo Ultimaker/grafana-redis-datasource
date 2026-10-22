@@ -213,6 +213,19 @@ describe('DataSource', () => {
    * ApplyTemplateVariables Method
    */
   describe('applyTemplateVariables', () => {
+    describe('bucket', () => {
+      it('If value is empty should replace with $__interval_ms via templateSrv', () => {
+        jest.spyOn(templateSrv, 'replace').mockImplementationOnce(() => '2000');
+        const query = getQuery({ bucket: 0 });
+        const scopedVars = { __interval_ms: { value: 2000, text: '2000' } };
+        const resultQuery = dataSource.applyTemplateVariables(query, scopedVars);
+        expect(templateSrv.replace).toHaveBeenCalledWith('$__interval_ms', scopedVars);
+        expect(resultQuery).toEqual({
+          ...query,
+          bucket: 2000,
+        });
+      });
+    });
     type KeyType = keyof RedisQuery;
     const testedFieldKeys: KeyType[] = [
       'keyName',
@@ -230,7 +243,7 @@ describe('DataSource', () => {
       describe(fieldKey, () => {
         it('If value is exist should replace via templateSrv', () => {
           const value = 'filter';
-          const query = getQuery({ [fieldKey]: value });
+          const query = getQuery({ [fieldKey]: value, bucket: 1000 });
           const scopedVars = { keyName: { value: 'key', key: '', text: '' } };
           const resultQuery = dataSource.applyTemplateVariables(query, scopedVars);
           expect(templateSrv.replace).toHaveBeenCalledWith(query[fieldKey], scopedVars);
@@ -242,7 +255,7 @@ describe('DataSource', () => {
 
         it('If value is empty should not replace via templateSrv', () => {
           const value = '';
-          const query = getQuery({ [fieldKey]: value });
+          const query = getQuery({ [fieldKey]: value, bucket: 1000 });
           const scopedVars = { keyName: { value: 'key', key: '', text: '' } };
           const resultQuery = dataSource.applyTemplateVariables(query, scopedVars);
           expect(templateSrv.replace).not.toHaveBeenCalled();
